@@ -61,7 +61,7 @@ class EmailSendToken(Resource):
             req = request.get_json(force=True)
             if req['email']:
                 token = create_access_token(identity=req['email'], expires_delta=False)
-                link = "http://localhost:3000/register/" + token
+                link = "http://localhost:3000/register/" + req['email'] + "/" + token
                 with mail.connect() as conn:
                     msg = Message(
                         subject="[Blockchain Online Voting] Registration Verification",
