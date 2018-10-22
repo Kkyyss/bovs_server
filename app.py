@@ -33,7 +33,7 @@ api = Api(app)
 class EmailNotification(Resource):
     def post(self):
         if request.data:
-            req = request.get_json()
+            req = request.get_json(force=True)
             emails = req['emails']
             election = req['election']
             link = "http://localhost:3000/"
@@ -58,7 +58,7 @@ class EmailNotification(Resource):
 class EmailSendToken(Resource):
     def post(self):
         if request.data:
-            req = request.get_json()
+            req = request.get_json(force=True)
             if req['email']:
                 token = create_access_token(identity=req['email'], expires_delta=False)
                 link = "http://localhost:3000/register/" + token
@@ -83,7 +83,7 @@ class EmailSendToken(Resource):
 class TokenVerification(Resource):
     def post(self):
         if request.data:
-            req = request.get_json()
+            req = request.get_json(force=True)
             if req['token']:
                 try:
                     data = decode_token(req['token']);
