@@ -1,5 +1,4 @@
-import json
-import os
+import jsonimport os
 
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
@@ -33,7 +32,7 @@ api = Api(app)
 class EmailNotification(Resource):
     def post(self):
         if request.data:
-            req = request.json
+            req = request.get_json()
             emails = req['emails']
             election = req['election']
             link = "http://localhost:3000/"
@@ -58,7 +57,7 @@ class EmailNotification(Resource):
 class EmailSendToken(Resource):
     def post(self):
         if request.data:
-            req = request.json
+            req = request.get_json()
             if req['email']:
                 token = create_access_token(identity=req['email'], expires_delta=False)
                 link = "http://localhost:3000/register/" + token
@@ -83,7 +82,7 @@ class EmailSendToken(Resource):
 class TokenVerification(Resource):
     def post(self):
         if request.data:
-            req = request.json
+            req = request.get_json()
             if req['token']:
                 try:
                     data = decode_token(req['token']);
