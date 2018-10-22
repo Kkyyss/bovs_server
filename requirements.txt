@@ -3,3 +3,4 @@ Flask-Restful==0.3.6
 Flask-Mail==0.9.1
 flask-jwt-extended==3.13.1
 flask-cors==3.0.6
+gunicorn==19.9.0
