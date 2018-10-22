@@ -59,7 +59,7 @@ class EmailSendToken(Resource):
     def post(self):
         if request.data:
             req = request.json
-            if req['email'] is not None:
+            if req['email']:
                 token = create_access_token(identity=req['email'], expires_delta=False)
                 link = "http://localhost:3000/register/" + token
                 with mail.connect() as conn:
@@ -84,7 +84,7 @@ class TokenVerification(Resource):
     def post(self):
         if request.data:
             req = request.json
-            if req['token'] is not None:
+            if req['token']:
                 try:
                     data = decode_token(req['token']);
                 except:
