@@ -32,22 +32,20 @@ api = Api(app)
 
 
 class EmailNotification(Resource):
-    @jwt_required
     def post(self):
-        current_user = get_jwt_identity()
-
-        if not current_user:
-            return None, 401
-
         if request.data:
             req = request.get_json(force=True)
             emails = req['emails']
+            print(emails)
             election = req['election']
-            link = "http://localhost:3000/"
+            link = "http://localhost:3000/login/voter/"
             with mail.connect() as conn:
+                print('inside mail connected')
                 for email in emails:
+                    token = create_access_token(identity={ 'email': email }, expires_delta=False)
+                    link = link + email + "/" + token + "/" + req['addr']
                     msg = Message(
-                        subject="[Blockchain Online Voting] You are invited to join an election: " + election['title'],
+                        subject="[Blockchain Online Voting] Voting: " + election['title'] + " invitation",
                         sender=app.config.get("MAIL_USERNAME"),
                         recipients=[email],
                         html="Hi User,<br/><br/><br/>" +
@@ -68,7 +66,7 @@ class EmailSendToken(Resource):
         if request.data:
             req = request.get_json(force=True)
             if req['email'] and req['role']:
-                token = create_access_token(identity={ 'email': req['email'], 'role': req['role'] })
+                token = create_access_token(identity={ 'email': req['email'] }, expires_delta=False)
                 link = "http://localhost:3000/login/" + req['email'] + "/" + req['role'] + "/" + token
                 with mail.connect() as conn:
                     msg = Message(
@@ -105,7 +103,7 @@ class TokenVerification(Resource):
 
 class CurrentDateTime(Resource):
     def get(self):
-        return jsonify({ 'now': int(time.time()) })
+        return jsonify({'now': int(time.time())})
 
 
 api.add_resource(EmailNotification, '/email')
