@@ -32,6 +32,7 @@ api = Api(app)
 
 
 class EmailNotification(Resource):
+    @jwt_required
     def post(self):
         if request.data:
             req = request.get_json(force=True)
