@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+
+  bovs:
+    container_name: bovs
+    restart: always
+    build: ./bovs
+    ports:
+      - "8000:8000"
+    command: gunicorn -w 1 -b 0.0.0.0:8000 app:app --timeout 90
+
+  nginx:
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - bovs
