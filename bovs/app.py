@@ -28,7 +28,7 @@ mail_settings = {
     "MAIL_PASSWORD": "bcvote1234"
 }
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__, static_folder='static', static_url_path='', template_folder='template')
 app.config.update(mail_settings)
 app.config['JWT_SECRET_KEY'] = os.urandom(12)
 cors = CORS(app)
@@ -48,15 +48,13 @@ def sendEventStatusNotification(data):
         r_link = "http://localhost:3000/login/"
         token = create_access_token(identity={ 'email': creator }, expires_delta=False)
         link = r_link + 'organizer/' + creator + "/" + token + "/" + addr
+        content= "The poll " + election['title'] + " was" + (" begin" if isStart else " over") + "." + \
+            " Please access the link to " + ("vote" if isStart else "view results") + ":"
         msg = Message(
-            subject="[Blockchain Online Voting] Voting: " + election['title'] + (" started" if isStart else " closed"),
+            subject="[BOVS - Blockchain Online Voting System] Voting: " + election['title'] + (" started" if isStart else " closed"),
             sender=app.config.get("MAIL_USERNAME"),
             recipients=[creator],
-            html="Hi Organizer,<br/><br/><br/>" +
-            "The poll " + election['title'] + " was" + (" begin" if isStart else " over") + ".<br/>" +
-            "Please login to the <b>Blockchain Online Voting System</b> to " + ("vote" if isStart else "view results") + ":<br/>" +
-            '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-            "Sent by Blockchain Online Voting System"
+            html=render_template("email_template.html", content=content, link=link)
         )
         try:
             mail.send(msg)
@@ -67,15 +65,13 @@ def sendEventStatusNotification(data):
                 continue
             token = create_access_token(identity={ 'email': email }, expires_delta=False)
             link = r_link + 'voter/' + email + "/" + token + "/" + addr
+            content = "The poll " + election['title'] + " was" + (" begin" if isStart else " over") + "." + \
+                " Please access the link to " + ("vote" if isStart else "view results") + ":"
             msg = Message(
-                subject="[Blockchain Online Voting] Voting: " + election['title'] + (" started" if isStart else " closed"),
+                subject="[BOVS - Blockchain Online Voting System] Voting: " + election['title'] + (" started" if isStart else " closed"),
                 sender=app.config.get("MAIL_USERNAME"),
                 recipients=[email],
-                html="Hi Voter,<br/><br/><br/>" +
-                "The poll " + election['title'] + " was" + (" begin" if isStart else " over") + ".<br/>" +
-                "Please login to the <b>Blockchain Online Voting System</b> to " + ("vote" if isStart else "view results") + ":<br/>" +
-                '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-                "Sent by Blockchain Online Voting System"
+                html=render_template("email_template.html", content=content, link=link)
             )
             try:
                 mail.send(msg)
@@ -97,15 +93,13 @@ class CloseEmailNotification(Resource):
             r_link = "http://localhost:3000/login/"
             token = create_access_token(identity={ 'email': creator }, expires_delta=False)
             link = r_link + 'organizer/' + creator + "/" + token + "/" + addr
+            content =  "The poll " + title + " was over." + \
+                " Please access the link to view results."
             msg = Message(
-                subject="[Blockchain Online Voting] Voting: " + title + " closed",
+                subject="[BOVS - Blockchain Online Voting System] Voting: " + title + " closed",
                 sender=app.config.get("MAIL_USERNAME"),
                 recipients=[creator],
-                html="Hi Organizer,<br/><br/><br/>" +
-                "The poll " + title + " was over.<br/>" +
-                "Please login to the <b>Blockchain Online Voting System</b> to view results:<br/>" +
-                '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-                "Sent by Blockchain Online Voting System"
+                html=render_template("email_template.html", content=content, link=link)
             )
             try:
                 mail.send(msg)
@@ -117,15 +111,13 @@ class CloseEmailNotification(Resource):
                     continue
                 token = create_access_token(identity={ 'email': email }, expires_delta=False)
                 link = r_link + 'voter/' + email + "/" + token + "/" + addr
+                content =  "The poll " + title + " was over." + \
+                        " Please access the link to view results."
                 msg = Message(
-                    subject="[Blockchain Online Voting] Voting: " + title + " closed",
+                    subject="[BOVS - Blockchain Online Voting System] Voting: " + title + " closed",
                     sender=app.config.get("MAIL_USERNAME"),
                     recipients=[email],
-                    html="Hi Voter,<br/><br/><br/>" +
-                    "The poll " + title + " was over.<br/>" +
-                    "Please login to the <b>Blockchain Online Voting System</b> to view results:<br/>" +
-                    '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-                    "Sent by Blockchain Online Voting System"
+                    html=render_template("email_template.html", content=content, link=link)
                 )
                 try:
                     mail.send(msg)
@@ -150,15 +142,13 @@ class EmailNotification(Resource):
             for email in emails:
                 token = create_access_token(identity={ 'email': email }, expires_delta=False)
                 link = r_link + 'voter/' + email + "/" + token + "/" + req['addr']
+                content = "You are invited to join a poll: " + election['title'] + "." + \
+                    " Please access the link to participate."
                 msg = Message(
-                    subject="[Blockchain Online Voting] Voting: " + election['title'] + " invitation",
+                    subject="[BOVS - Blockchain Online Voting System] Voting: " + election['title'] + " invitation",
                     sender=app.config.get("MAIL_USERNAME"),
                     recipients=[email],
-                    html="Hi User,<br/><br/><br/>" +
-                    "You are invited to join an election: " + election['title'] + ".<br/>" +
-                    "Please login to the <b>Blockchain Online Voting System</b>:<br/>" +
-                    '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-                    "Sent by Blockchain Online Voting System"
+                    html=render_template("email_template.html", content=content, link=link)
                 )
                 try:
                     mail.send(msg)
@@ -181,16 +171,13 @@ class EmailSendToken(Resource):
             if req['email'] and req['role']:
                 token = create_access_token(identity={ 'email': req['email'] }, expires_delta=False)
                 link = "http://localhost:3000/login/basic/" + req['email'] + "/" + req['role'] + "/" + token
+                content = "Please access the link to login."
+
                 msg = Message(
-                    subject="[Blockchain Online Voting] Registration Verification",
+                    subject="[BOVS - Blockchain Online Voting System] Login Verification",
                     sender=app.config.get("MAIL_USERNAME"),
                     recipients=[req['email']],
-                    html="Hi User,<br/><br/><br/>" +
-                    "Before using the <b>Blockchain Online Voting System</b>, please verify your email address.<br/>" +
-                    '<a  href="' + link + '" target="_blank">Verify Email</a><br/>' +
-                    "Or verify using this link:<br/>" +
-                    '<a  href="' + link + '" target="_blank">' + link + '</a><br/><br/><br/>' +
-                    "Sent by Blockchain Online Voting System"
+                    html=render_template("email_template.html", content=content, link=link)
                 )
                 try:
                     mail.send(msg)
