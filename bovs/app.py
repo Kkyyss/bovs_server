@@ -39,7 +39,6 @@ api = Api(app)
 
 def sendEventStatusNotification(data):
     with app.app_context():
-        print('kappa')
         emails = data['emails']
         addr = data['addr']
         election = data['election']
@@ -82,7 +81,7 @@ def sendEventStatusNotification(data):
 
 
 class CloseEmailNotification(Resource):
-    # @jwt_required
+    @jwt_required
     def post(self):
         if request.data:
             req = request.get_json(force=True)
@@ -127,18 +126,19 @@ class CloseEmailNotification(Resource):
             return None, 200
 
 
+# To notify the users the status of the poll (i.e. instant notification, scheduled notification)
 class EmailNotification(Resource):
-    # @jwt_required
+    @jwt_required                                       # JWT verification
     def post(self):
         if request.data:
-            req = request.get_json(force=True)
-
-            emails = req['emails']
-            startDate = req['startDate']
-            isManual = req['isManual']
-            endDate = req['endDate']
-            election = req['election']
-            r_link = "http://localhost:3000/login/"
+            req = request.get_json(force=True)          # retrieve the data from API request by the client side
+            emails = req['emails']                      # get voters' email
+            startDate = req['startDate']                # get start date
+            isManual = req['isManual']                  # get end date mode
+            endDate = req['endDate']                    # get end date
+            election = req['election']                  # get election data
+            r_link = "http://localhost:3000/login/"     # root URL
+            # Send all the emails with a loop
             for email in emails:
                 token = create_access_token(identity={ 'email': email }, expires_delta=False)
                 link = r_link + 'voter/' + email + "/" + token + "/" + req['addr']
@@ -155,20 +155,26 @@ class EmailNotification(Resource):
                 except Exception as e:
                     return e.message, 400
 
+            # Start date mode: Custom
             if election['startNow'] == False:
+                # Schedule the start poll notification
                 scheduler.add_job(sendEventStatusNotification, 'date', run_date=startDate,
                                   args=[{ 'emails': emails, 'creator': req['creator'], 'election': election, 'addr': req['addr'], 'start': True }])
+            # End date mode: Custom
             if isManual == False:
+                # Schedule the end poll notification
                 scheduler.add_job(sendEventStatusNotification, 'date', run_date=endDate,
                                   args=[{ 'emails': emails, 'creator': req['creator'], 'election': election, 'addr': req['addr'], 'start': False }])
             return None, 200
 
 
+# send magic link and JWT token
 class EmailSendToken(Resource):
     def post(self):
         if request.data:
-            req = request.get_json(force=True)
+            req = request.get_json(force=True) # retrieve the data from API request by the client side
             if req['email'] and req['role']:
+                # create JWT token
                 token = create_access_token(identity={ 'email': req['email'] }, expires_delta=False)
                 link = "http://localhost:3000/login/basic/" + req['email'] + "/" + req['role'] + "/" + token
                 content = "Please access the link to login."
@@ -189,10 +195,11 @@ class EmailSendToken(Resource):
             return None, 400
 
 
+# magic link token verification
 class TokenVerification(Resource):
-
     @jwt_required
     def get(self):
+        # verify the user
         current_user = get_jwt_identity()
 
         if not current_user:
@@ -201,6 +208,7 @@ class TokenVerification(Resource):
         return current_user, 200
 
 
+# Get the current date adn time of the server
 class CurrentDateTime(Resource):
     def get(self):
         return jsonify({'now': int(time.time())})
